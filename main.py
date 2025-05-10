@@ -63,3 +63,66 @@ while cap.isOpened():
     if model:
         results = model(frame, verbose=False)
         frame = results[0].plot()
+
+    if pose:
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
+
+        # Process the frame and get pose landmarks
+        results = pose.process(rgb_frame)
+
+        # Draw pose landmarks on the original frame
+        if results.pose_landmarks:
+            landmark_spec = mp_drawing.DrawingSpec(
+                color=(0, 255, 0), thickness=2, circle_radius=2
+            )
+            connection_spec = mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2)
+
+            mp_drawing.draw_landmarks(
+                frame,
+                results.pose_landmarks,
+                mp_pose.POSE_CONNECTIONS,
+                landmark_spec,
+                connection_spec,
+            )
+
+            # Draw additional pose connections
+            landmarks = results.pose_landmarks.landmark
+
+            def draw_extra_connection(p1, p2):
+                x1 = int(landmarks[p1].x * width)
+                y1 = int(landmarks[p1].y * height)
+                x2 = int(landmarks[p2].x * width)
+                y2 = int(landmarks[p2].y * height)
+                cv2.line(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+            extra_connctions = [
+                (0, 1),  # Nose to inner eye
+                (0, 4),  # Nose to outer eye
+                (9, 10),  # Shoulders connection
+                (11, 13),  # Upper arms connections
+                (12, 14),
+                (13, 15),  # Lower arms connections
+                (14, 16),
+                (23, 24),  # Hips connection
+                (11, 23),  # Shoulders to hips
+                (12, 14),
+                (23, 25),  # Upper legs connections
+                (24, 26),
+                (25, 27),  # Lower legs connections
+                (26, 28),
+                (27, 31),  # Foot connections
+                (28, 32),
+            ]
+            for connection in extra_connctions:
+                draw_extra_connection(*connection)
+
+    # Write the processed frame to the output video
+    out.write(frame)
+
+# Release resources
+cap.release()
+out.release()
+pose.close()
+cv2.destroyAllWindows()
+
+print(f"Output video saved as {output_video}")
