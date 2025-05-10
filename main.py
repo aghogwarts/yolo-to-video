@@ -6,7 +6,7 @@ import os
 # Load your 1080p video
 # Make sure to replace the path with the correct one for your system
 input_video = ""
-output_video = "yolo.mp4"  # Output video path in the same directory
+output_video = os.path.join("./edits", f"{os.path.splitext(input_video)[0]}.mp4")
 USE_MEDIAPIPE = True
 USE_YOLO = True
 
