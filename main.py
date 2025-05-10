@@ -35,3 +35,31 @@ pose = (
 
 # Initialize YOLOv8 model
 model = YOLO("yolov8n.pt") if USE_YOLO else None
+
+# Open the video file
+cap = cv2.VideoCapture(input_video)
+if not cap.isOpened():
+    print("Error: Could not open video.")
+    exit()
+
+# Get video properties
+fps = cap.get(cv2.CAP_PROP_FPS) if cap.get(cv2.CAP_PROP_FPS) > 0 else 30
+
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+out = cv2.VideoWriter(output_video, fourcc, fps, (width, height))
+
+frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+print(f"-- Analysing {frame_count} frames in {input_video}")
+
+# Process the video frame by frame
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    if model:
+        results = model(frame, verbose=False)
+        frame = results[0].plot()
